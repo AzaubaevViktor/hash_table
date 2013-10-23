@@ -5,6 +5,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef DEBUG
+#include <stdio.h>
+
+#define STANDART "\x1b[0m"
+#define BOLD_WHITE "\x1b[1;37m"
+#define BOLD_YELLOW "\x1b[1;33m"
+#define BOLD_GREEN "\x1b[1;32m"
+
+void printHashTable(HashTable *table) {
+  u_int64_t i=0;
+  LinkedList *list = NULL;
+  printf(BOLD_GREEN"HashTable"STANDART" on (%p), %lli elements:\n",table,table->nElements);
+  for (i=0;i<table->nElements;i++) {
+    list = *((table->array) + i);
+    printf("%lli: ",i);
+    if (NULL != list) {
+      printList(list);
+    } else {
+      printf("None\n");
+    }
+  }
+}
+
+#endif
+
 u_int64_t pHashPower[10] = {1,53,2809,148877,7890481,418195493,22164361129,1174711139837,62259690411361,3299763591802133};
 
 int _getHashFromString(char *str) {
@@ -19,12 +44,16 @@ int _getHashFromString(char *str) {
 
 Data *initializeData(char *str, u_int64_t value, Error *error) {
   Data *data = calloc(sizeof(Data),1);
-  if (NULL != data) {
+  if (NULL == data) {
     setError(error,MEMORY_ALLOCATE_ERROR,"\0");
     return NULL;
   }
   strcpy(data->key,str);
   data->value = value;
+
+#ifdef DEBUG
+  printf(BOLD_GREEN"Init Data"STANDART" on (%p)={'%s',%lli}\n",data,data->key,data->value);
+#endif
 
   return data;
 }
@@ -43,22 +72,17 @@ HashTable *initializeHashTable(u_int64_t nElements, Error *error) {
 
   table->nElements = nElements;
 
+#ifdef DEBUG
+  printf(BOLD_GREEN"Init HashTable"STANDART" on (%p) by %lli elements\n",table,table->nElements);
+#endif
+
   return table;
 }
 
 
 void **_getPtrListFromTableByString(HashTable *table, char *str) {
-  return (*(table->array) + (_getHashFromString(str) % table->nElements));
+  return ((table->array) + (_getHashFromString(str) % table->nElements));
 }
-
-/* Установить значение list["abs"] = 4
- * Получить значение:
- * Найти, вырвать данные
- *
- * Для общего развития:
- * Создание новой ячейки
- * Удаление ячейки
- */
 
 int _isConcur(void *data, void *str) {
   if (!strcmp(((Data *)data)->key,(char *)str)) {
@@ -75,15 +99,20 @@ Element *_findElementInTableByString(HashTable *table, char *str) {
 
 Data *getDataFromTableByString(HashTable *table, char *str) {
   Element *elem = _findElementInTableByString(table,str);
+#ifdef DEBUG
+  printf(BOLD_GREEN"Get Data from HastTable"STANDART" on (%p) by '%s'; Find Element on (%p)\n",table,str,elem);
+#endif
   return ((NULL == elem) ? NULL : elem->data);
 }
 
 int setDataInTableByString(HashTable *table, char *str, u_int64_t value, Error *error) {
-  LinkedList **list = (LinkedList **) _getPtrListFromTableByString(table,str);
+  void **arrayCell = _getPtrListFromTableByString(table,str);
+  LinkedList *list = *arrayCell;
   Data *data = NULL;
-  if (NULL == *list) {
-    *list = initializeList(error);
-    if (NULL == *list) {
+  if (NULL == list) {
+    *arrayCell = initializeList(error);
+    list = *arrayCell;
+    if (NULL == list) {
       return 1; }
   }
 
@@ -93,12 +122,16 @@ int setDataInTableByString(HashTable *table, char *str, u_int64_t value, Error *
     data = initializeData(str,value,error);
     if (NULL == data) {
       return 1; }
-    insertDataIntoList(*list,data,error);
+    insertDataIntoList(list,data,error);
     if (0 != error->error) {
       return 1; }
   } else {
       data->value = value;
   }
+
+#ifdef DEBUG
+  printf(BOLD_GREEN "In HashTable"STANDART" (%p) set data (%p) by '%s': %lli\n",table,data,str,data->value);
+#endif
 
   return 0;
 }
@@ -108,5 +141,8 @@ int deleteDataFromTableByString(HashTable *table, char *str) {
   LinkedList **list = (LinkedList **) _getPtrListFromTableByString(table,str);
   result = removeDataFromList(*list,str,_isConcur);
   list = NULL;
+#ifdef DEBUG
+  printf(BOLD_GREEN"In HashTable "STANDART" (%p) delete Data From Key='%s', result=%d\n",table,str,result);
+#endif
   return result;
 }

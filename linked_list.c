@@ -3,12 +3,34 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef DEBUG
+#include <stdio.h>
+
+#define STANDART "\x1b[0m"
+#define BOLD_WHITE "\x1b[1;37m"
+#define BOLD_YELLOW "\x1b[1;33m"
+#define BOLD_GREEN "\x1b[1;32m"
+
+void printList(LinkedList *list) {
+  Element *now = NULL;
+  printf(BOLD_WHITE "List" STANDART " on (%p), [r->(%p),e->(%p)]:\n",list,list->root,list->end);
+  for(now = list->root; NULL != now; now = now->next) {
+    printf("[%p] (%p)" BOLD_WHITE " -> " STANDART,now->data,now->next);
+  }
+  printf("NULL\n");
+}
+
+#endif
+
 Element *initializeElement(void *data, Error *error) {
   Element *elem = calloc(sizeof(Element),1);
   if (NULL == elem) {
     setError(error,MEMORY_ALLOCATE_ERROR,"\0");
     return NULL; }
   elem->data = data;
+#ifdef DEBUG
+  printf(BOLD_WHITE "InitializeElement" STANDART " on (%p)\n", elem);
+#endif
   return elem;
 }
 
@@ -17,15 +39,20 @@ int _bindElements(Element *parent, Element *children, Error *error) {
     setError(error,LINK_ERROR,"\0");
     return 1; }
   parent->next = children;
+#ifdef DEBUG
+  printf(BOLD_WHITE "Binding elements" STANDART " on (%p) -> (%p)\n",parent, children);
+#endif
   return 0;
 }
 
 LinkedList *initializeList(Error *error) {
   LinkedList *list = calloc(sizeof(LinkedList),1);
-  if (NULL != list) {
+  if (NULL == list) {
     setError(error,MEMORY_ALLOCATE_ERROR,"\0");
     return NULL; }
-
+#ifdef DEBUG
+  printf(BOLD_WHITE "InitializeList" STANDART " on (%p)\n", list);
+#endif
   return list;
 }
 
@@ -39,6 +66,9 @@ int _insertElementIntoList(LinkedList *list, Element *element, Error *error) {
       return 1; }
     list->end = element;
   }
+#ifdef DEBUG
+  printf(BOLD_WHITE "Insert element into list" STANDART " (%p), root:(%p), end:(%p)\n",list,list->root,list->end);
+#endif
   return 0;
 }
 
@@ -46,11 +76,17 @@ int insertDataIntoList(LinkedList *list, void *data, Error *error) {
   Element *elem = initializeElement(data,error);
   if (0 != error->error) {
     return 1; }
+#ifdef DEBUG
+  printf(BOLD_WHITE"Insert data into list"STANDART" on (%p), data on (%p)\n",list,data);
+#endif
   return _insertElementIntoList(list,elem,error);
 }
 
 Element *findDataInList(LinkedList *list, void *data, int (*isConcur)(void *, void *)) {
   Element *now = NULL;
+#ifdef DEBUG
+  printf(BOLD_WHITE "Find data in List" STANDART " on (%p), query=(%s)\n",list,(char *)data);
+#endif
   if (NULL != list->root) {
     for (now = list->root; 0 != now; now = now->next) {
       if ((*isConcur)(now->data,data)) {
@@ -61,10 +97,20 @@ Element *findDataInList(LinkedList *list, void *data, int (*isConcur)(void *, vo
   return NULL;
 }
 
+void _deleteElement(Element **elem) {
+  if (NULL != *elem) {
+    free((*elem)->data);
+    free(*elem); }
+}
+
 int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, void *)) {
   Element *now = NULL, *prev = NULL;
   int isNowFirstElement, isNowLastElement,isNullElementInList;
   isNullElementInList = (NULL == list->root);
+
+#ifdef DEBUG
+  printf(BOLD_WHITE "Remove data from list" STANDART " on (%p), query='%s'\n",list,(char *)data);
+#endif
 
   if (!isNullElementInList) {
     for (now = list->root; NULL != now; prev = now, now = now->next) {
@@ -78,14 +124,12 @@ int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, voi
           switch (isNowLastElement) {
           case 0: /* --PN-- |=> --P-- */
             prev->next = now->next;
-            free(now->data);
-            free(now);
+            _deleteElement(&now);
             break;
           case 1: /* ---PN |=> ---P */
             list->end = prev;
             prev->next = NULL;
-            free(now->data);
-            free(now);
+            _deleteElement(&now);
             break;
           }
           break;
@@ -93,14 +137,12 @@ int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, voi
           switch (isNowLastElement) {
           case 0: /* N---- |=> ---- */
             list->root = now->next;
-            free(now->data);
-            free(now);
+            _deleteElement(&now);
             break;
           case 1: /* N |=> NULL */
             list->root = NULL;
             list->end = NULL;
-            free(now->data);
-            free(now);
+            _deleteElement(&now);
             break;
           }
           break;
@@ -112,12 +154,6 @@ int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, voi
     }
   }
   return 1;
-}
-
-void _deleteElement(Element **elem) {
-  if (NULL != *elem) {
-    free((*elem)->data);
-    free(*elem); }
 }
 
 void deleteList(LinkedList **list) {
