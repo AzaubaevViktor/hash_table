@@ -20,7 +20,7 @@ void printHashTable(HashTable *table) {
   printf(BOLD_GREEN"HashTable"STANDART" on (%p), %"PRIu64" elements:\n",table,table->nElements);
   for (i=0;i<table->nElements;i++) {
     list = *((table->array) + i);
-    printf("%"PRIu64": ",i);
+    printf(BOLD_YELLOW"%"PRIu64": "STANDART,i);
     if (NULL != list) {
       printList(list);
     } else {
@@ -33,12 +33,12 @@ void printHashTable(HashTable *table) {
 
 u_int64_t pHashPower[10] = {1,53,2809,148877,7890481,418195493,22164361129,1174711139837,62259690411361,3299763591802133};
 
-int _getHashFromString(char *str) {
+u_int64_t _getHashFromString(char *str) {
   char *s = NULL;
   int i = 0;
   u_int64_t hash = 0;
-  for(s = str, i = 0; (*s) && (i<10) ; s++, i++) {
-    hash += ((u_int64_t) (*s)) * pHashPower[i];
+  for(s = str, i = 0; (*s); s++, i++) {
+    hash += ((u_int64_t) (*s - 'a' + 1)) * pHashPower[i%10];
   }
   return hash;
 }
@@ -56,10 +56,11 @@ Data *initializeData(char *str, u_int64_t value, Error *error) {
   }
 
   strcpy(data->key,str);
+  data->hash = _getHashFromString(str);
   data->value = value;
 
 #ifdef DEBUG
-  printf(BOLD_GREEN"Init Data"STANDART" on (%p)={'%s',%"PRIu64"}\n",data,data->key,data->value);
+  printf(BOLD_GREEN"Init Data"STANDART" on (%p)={'%s',hash=%"PRIu64",value=%"PRIu64"}\n",data,data->key,data->hash,data->value);
 #endif
 
   return data;
@@ -86,18 +87,20 @@ HashTable *initializeHashTable(u_int64_t nElements, Error *error) {
   return table;
 }
 
-
 void **_getPtrListFromTableByString(HashTable *table, char *str) {
   return ((table->array) + (_getHashFromString(str) % table->nElements));
 }
 
 int _isConcur(void *data, void *str) {
-  if (!strcmp(((Data *)data)->key,(char *)str)) {
-    return 1;
-  } else {
-    return 0;
-  }
-  return 0;
+  /* ( _getHashFromString((char *)str) == (((Data *)data)->hash) )
+   *           Hash hit
+   * (!strcmp(((Data *)data)->key,(char *)str)
+   *           String hit
+   */
+#ifdef DEBUG
+  printf(BOLD_GREEN"Cocured: %d\n"STANDART,_getHashFromString((char *)str) == (((Data *)data)->hash));
+#endif
+  return ( _getHashFromString((char *)str) == (((Data *)data)->hash) ) && (!strcmp(((Data *)data)->key,(char *)str));
 }
 
 Element *_findElementInTableByString(HashTable *table, char *str) {
@@ -137,7 +140,7 @@ int setDataInTableByString(HashTable *table, char *str, u_int64_t value, Error *
   }
 
 #ifdef DEBUG
-  printf(BOLD_GREEN "In HashTable"STANDART" (%p) set data (%p) by '%s': %"PRIu64"\n",table,data,str,data->value);
+  printf(BOLD_GREEN "In HashTable"STANDART" (%p) set data (%p) by '%s' (hash=%"PRIu64"): %"PRIu64"\n",table,data,str,data->hash,data->value);
 #endif
 
   return 0;
@@ -149,7 +152,7 @@ int deleteDataFromTableByString(HashTable *table, char *str) {
   result = removeDataFromList(*list,str,_isConcur);
   list = NULL;
 #ifdef DEBUG
-  printf(BOLD_GREEN"In HashTable "STANDART" (%p) delete Data From Key='%s', result=%d\n",table,str,result);
+  printf(BOLD_GREEN"In HashTable "STANDART" (%p) delete Data From Key='%s' (hash=%"PRIu64"), result=%d\n",table,str,_getHashFromString(str),result);
 #endif
   return result;
 }

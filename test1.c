@@ -4,7 +4,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-int main(void)
+int test(void)
 {
   Error error;
   HashTable *table;

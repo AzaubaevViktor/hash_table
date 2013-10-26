@@ -7,6 +7,7 @@
 
 typedef struct {
   char *key;
+  u_int64_t hash;
   u_int64_t value;
 } Data;
 /* TODO: Хранить полный хэш-код */
