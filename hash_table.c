@@ -7,6 +7,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
+#include <inttypes.h>
 
 #define STANDART "\x1b[0m"
 #define BOLD_WHITE "\x1b[1;37m"
@@ -16,10 +17,10 @@
 void printHashTable(HashTable *table) {
   u_int64_t i=0;
   LinkedList *list = NULL;
-  printf(BOLD_GREEN"HashTable"STANDART" on (%p), %lli elements:\n",table,table->nElements);
+  printf(BOLD_GREEN"HashTable"STANDART" on (%p), %"PRIu64" elements:\n",table,table->nElements);
   for (i=0;i<table->nElements;i++) {
     list = *((table->array) + i);
-    printf("%lli: ",i);
+    printf("%"PRIu64": ",i);
     if (NULL != list) {
       printList(list);
     } else {
@@ -48,11 +49,17 @@ Data *initializeData(char *str, u_int64_t value, Error *error) {
     setError(error,MEMORY_ALLOCATE_ERROR,"\0");
     return NULL;
   }
+  data->key = calloc(sizeof(char),strlen(str));
+  if (NULL == data) {
+    setError(error,MEMORY_ALLOCATE_ERROR,"\0");
+    return NULL;
+  }
+
   strcpy(data->key,str);
   data->value = value;
 
 #ifdef DEBUG
-  printf(BOLD_GREEN"Init Data"STANDART" on (%p)={'%s',%lli}\n",data,data->key,data->value);
+  printf(BOLD_GREEN"Init Data"STANDART" on (%p)={'%s',%"PRIu64"}\n",data,data->key,data->value);
 #endif
 
   return data;
@@ -73,7 +80,7 @@ HashTable *initializeHashTable(u_int64_t nElements, Error *error) {
   table->nElements = nElements;
 
 #ifdef DEBUG
-  printf(BOLD_GREEN"Init HashTable"STANDART" on (%p) by %lli elements\n",table,table->nElements);
+  printf(BOLD_GREEN"Init HashTable"STANDART" on (%p) by %"PRIu64" elements\n",table,table->nElements);
 #endif
 
   return table;
@@ -130,7 +137,7 @@ int setDataInTableByString(HashTable *table, char *str, u_int64_t value, Error *
   }
 
 #ifdef DEBUG
-  printf(BOLD_GREEN "In HashTable"STANDART" (%p) set data (%p) by '%s': %lli\n",table,data,str,data->value);
+  printf(BOLD_GREEN "In HashTable"STANDART" (%p) set data (%p) by '%s': %"PRIu64"\n",table,data,str,data->value);
 #endif
 
   return 0;

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 typedef struct {
-  char key[11];
+  char *key;
   u_int64_t value;
 } Data;
 /* TODO: Хранить полный хэш-код */
