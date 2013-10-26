@@ -10,23 +10,33 @@
 #include <inttypes.h>
 
 #define STANDART "\x1b[0m"
-#define BOLD_WHITE "\x1b[1;37m"
-#define BOLD_YELLOW "\x1b[1;33m"
-#define BOLD_GREEN "\x1b[1;32m"
+#define BOLD_WHITE STANDART"\x1b[1;37m"
+#define BOLD_YELLOW STANDART"\x1b[1;33m"
+#define BOLD_GREEN STANDART"\x1b[1;32m"
+#define GREEN_UNDERLINE STANDART"\x1b[4;32m"
+#define BOLD_RED_UNDERLINE STANDART"\x1b[1;4;31m"
+#define HEADER STANDART GREEN_UNDERLINE
 
 void printHashTable(HashTable *table) {
   u_int64_t i=0;
   LinkedList *list = NULL;
-  printf(BOLD_GREEN"HashTable"STANDART" on (%p), %"PRIu64" elements:\n",table,table->nElements);
+  printf(HEADER"HashTable"STANDART" on (%p), %"PRIu64" elements:\n",table,table->nElements);
   for (i=0;i<table->nElements;i++) {
     list = *((table->array) + i);
     printf(BOLD_YELLOW"%"PRIu64": "STANDART,i);
+#ifdef DEBUG_LINKED_LIST
     if (NULL != list) {
       printList(list);
     } else {
       printf("None\n");
     }
+#else
+      printf("List on (%p), (r->(%p),e->(%p),nCollision=%"PRIu64"\n",list,list->root,list->end,list->nCollision);
+#endif
   }
+#ifndef DEBUG_LINKED_LIST
+  puts("For more information enable DEBUG_LINKED_LIST on linked_list.h");
+#endif
 }
 
 #endif
@@ -60,7 +70,7 @@ Data *initializeData(char *str, u_int64_t value, Error *error) {
   data->value = value;
 
 #ifdef DEBUG
-  printf(BOLD_GREEN"Init Data"STANDART" on (%p)={'%s',hash=%"PRIu64",value=%"PRIu64"}\n",data,data->key,data->hash,data->value);
+  printf(HEADER"Data"STANDART" "BOLD_GREEN"init"STANDART" on (%p)={'%s',hash=%"PRIu64",value=%"PRIu64"}\n",data,data->key,data->hash,data->value);
 #endif
 
   return data;
@@ -81,7 +91,7 @@ HashTable *initializeHashTable(u_int64_t nElements, Error *error) {
   table->nElements = nElements;
 
 #ifdef DEBUG
-  printf(BOLD_GREEN"Init HashTable"STANDART" on (%p) by %"PRIu64" elements\n",table,table->nElements);
+  printf(HEADER"HashTable"BOLD_GREEN" init"STANDART" on (%p) by %"PRIu64" elements\n",table,table->nElements);
 #endif
 
   return table;
@@ -98,7 +108,7 @@ int _isConcur(void *data, void *str) {
    *           String hit
    */
 #ifdef DEBUG
-  printf(BOLD_GREEN"Cocured: %d\n"STANDART,_getHashFromString((char *)str) == (((Data *)data)->hash));
+  printf(BOLD_GREEN"Concured: %d\n"STANDART,_getHashFromString((char *)str) == (((Data *)data)->hash));
 #endif
   return ( _getHashFromString((char *)str) == (((Data *)data)->hash) ) && (!strcmp(((Data *)data)->key,(char *)str));
 }
@@ -110,7 +120,7 @@ Element *_findElementInTableByString(HashTable *table, char *str) {
 Data *getDataFromTableByString(HashTable *table, char *str) {
   Element *elem = _findElementInTableByString(table,str);
 #ifdef DEBUG
-  printf(BOLD_GREEN"Get Data from HastTable"STANDART" on (%p) by '%s'; Find Element on (%p)\n",table,str,elem);
+  printf(BOLD_GREEN"From "HEADER"HastTable"BOLD_GREEN" get data"STANDART" on (%p) by '%s'; Find Element on (%p)\n",table,str,elem);
 #endif
   return ((NULL == elem) ? NULL : elem->data);
 }
@@ -140,7 +150,7 @@ int setDataInTableByString(HashTable *table, char *str, u_int64_t value, Error *
   }
 
 #ifdef DEBUG
-  printf(BOLD_GREEN "In HashTable"STANDART" (%p) set data (%p) by '%s' (hash=%"PRIu64"): %"PRIu64"\n",table,data,str,data->hash,data->value);
+  printf(BOLD_GREEN"In "HEADER "HashTable"STANDART" (%p) set data (%p) by '%s' (hash=%"PRIu64"): %"PRIu64"\n",table,data,str,data->hash,data->value);
 #endif
 
   return 0;
@@ -152,7 +162,7 @@ int deleteDataFromTableByString(HashTable *table, char *str) {
   result = removeDataFromList(*list,str,_isConcur);
   list = NULL;
 #ifdef DEBUG
-  printf(BOLD_GREEN"In HashTable "STANDART" (%p) delete Data From Key='%s' (hash=%"PRIu64"), result=%d\n",table,str,_getHashFromString(str),result);
+  printf(BOLD_GREEN"In "HEADER"HashTable "STANDART" (%p) "BOLD_RED_UNDERLINE"delete"STANDART" Data From Key='%s' (hash=%"PRIu64"), result=%d\n",table,str,_getHashFromString(str),result);
 #endif
   return result;
 }

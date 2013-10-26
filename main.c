@@ -15,17 +15,17 @@ int main(void)
   table = initializeHashTable(2,&error);
 
   setDataInTableByString(table,"abc",10,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   setDataInTableByString(table,"aaaaaaaaaaaaaa",5,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   setDataInTableByString(table,"abd",1,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   setDataInTableByString(table,"abc",7,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   printHashTable(table);puts("====");
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   data = getDataFromTableByString(table,"abc");
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   puts("====");
   if (NULL != data) {
     printf("Data(%p):Key='%s',val=(%"PRIu64")\n",data,data->key,data->value);
@@ -33,15 +33,15 @@ int main(void)
     printf("Not fuond!\n");
   }
   deleteDataFromTableByString(table,"abc");
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   setDataInTableByString(table,"abc",7,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   setDataInTableByString(table,"olololololololololololol",1000000,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   setDataInTableByString(table,"AhTiZEbanyTiNahui",70000000000,&error);
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   data = getDataFromTableByString(table,"AhTiZEbanyTiNahui");
-  puts("====");printHashTable(table);puts("====");
+  puts("=========");
   puts("====");
   if (NULL != data) {
     printf("Data(%p):Key='%s',val=(%"PRIu64")\n",data,data->key,data->value);

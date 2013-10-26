@@ -2,6 +2,7 @@
 #define LINKED_LIST_H
 
 #include "errors.h"
+#include <stdlib.h>
 
 typedef struct _Element {
   struct _Element *next;
@@ -11,6 +12,7 @@ typedef struct _Element {
 typedef struct {
   Element *root;
   Element *end;
+  u_int64_t nCollision;
 } LinkedList;
 
 #ifndef MEMORY_ALLOCATE_ERROR
@@ -21,7 +23,7 @@ typedef struct {
 #define LINK_ERROR (72101)
 #endif
 
-#define DEBUG
+#define DEBUG_LINKED_LIST
 
 LinkedList *initializeList(Error *error);
 int insertDataIntoList(LinkedList *list, void *data, Error *error);
@@ -29,7 +31,7 @@ Element *findDataInList(LinkedList *list, void *data, int (*isConcur)(void *, vo
 int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, void *));
 void setError(Error *error, int errorValue, char *str);
 void deleteList(LinkedList **list);
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
 void printList(LinkedList *list);
 #endif
 /* Todo: написать фукнцию, разрушающую список/элемент */

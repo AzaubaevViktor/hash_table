@@ -3,8 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
 #include <stdio.h>
+#include <inttypes.h>
 
 #define STANDART "\x1b[0m"
 #define BOLD_WHITE "\x1b[1;37m"
@@ -13,7 +14,7 @@
 
 void printList(LinkedList *list) {
   Element *now = NULL;
-  printf(BOLD_WHITE "List" STANDART " on (%p), [r->(%p),e->(%p)]:\n",list,list->root,list->end);
+  printf(BOLD_WHITE "List" STANDART " on (%p), [r->(%p),e->(%p),nColl=%"PRIu64"]:\n",list,list->root,list->end,list->nCollision);
   for(now = list->root; NULL != now; now = now->next) {
     printf("[%p] (%p)" BOLD_WHITE " -> " STANDART,now->data,now->next);
   }
@@ -28,7 +29,7 @@ Element *initializeElement(void *data, Error *error) {
     setError(error,MEMORY_ALLOCATE_ERROR,"\0");
     return NULL; }
   elem->data = data;
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
   printf(BOLD_WHITE "InitializeElement" STANDART " on (%p)\n", elem);
 #endif
   return elem;
@@ -39,7 +40,7 @@ int _bindElements(Element *parent, Element *children, Error *error) {
     setError(error,LINK_ERROR,"\0");
     return 1; }
   parent->next = children;
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
   printf(BOLD_WHITE "Binding elements" STANDART " on (%p) -> (%p)\n",parent, children);
 #endif
   return 0;
@@ -50,7 +51,7 @@ LinkedList *initializeList(Error *error) {
   if (NULL == list) {
     setError(error,MEMORY_ALLOCATE_ERROR,"\0");
     return NULL; }
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
   printf(BOLD_WHITE "InitializeList" STANDART " on (%p)\n", list);
 #endif
   return list;
@@ -66,8 +67,9 @@ int _insertElementIntoList(LinkedList *list, Element *element, Error *error) {
       return 1; }
     list->end = element;
   }
-#ifdef DEBUG
-  printf(BOLD_WHITE "Insert element into list" STANDART " (%p), root:(%p), end:(%p)\n",list,list->root,list->end);
+  list->nCollision++;
+#ifdef DEBUG_LINKED_LIST
+  printf(BOLD_WHITE "Insert element into list" STANDART " (%p), root:(%p), end:(%p), nCollisioon=%"PRIu64"\n",list,list->root,list->end,list->nCollision);
 #endif
   return 0;
 }
@@ -76,7 +78,7 @@ int insertDataIntoList(LinkedList *list, void *data, Error *error) {
   Element *elem = initializeElement(data,error);
   if (0 != error->error) {
     return 1; }
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
   printf(BOLD_WHITE"Insert data into list"STANDART" on (%p), data on (%p)\n",list,data);
 #endif
   return _insertElementIntoList(list,elem,error);
@@ -84,7 +86,7 @@ int insertDataIntoList(LinkedList *list, void *data, Error *error) {
 
 Element *findDataInList(LinkedList *list, void *data, int (*isConcur)(void *, void *)) {
   Element *now = NULL;
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
   printf(BOLD_WHITE "Find data in List" STANDART " on (%p), query=(%s)\n",list,(char *)data);
 #endif
   if (NULL != list->root) {
@@ -108,7 +110,7 @@ int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, voi
   int isNowFirstElement, isNowLastElement,isNullElementInList;
   isNullElementInList = (NULL == list->root);
 
-#ifdef DEBUG
+#ifdef DEBUG_LINKED_LIST
   printf(BOLD_WHITE "Remove data from list" STANDART " on (%p), query='%s'\n",list,(char *)data);
 #endif
 
@@ -147,6 +149,8 @@ int removeDataFromList(LinkedList *list, void *data, int (*isConcur)(void *, voi
           }
           break;
         }
+
+        list->nCollision--;
 
         return 0;
 
